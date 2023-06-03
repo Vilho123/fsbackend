@@ -4,6 +4,7 @@ const app = express();
 const cors = require('cors')
 
 app.use(cors())
+app.use(express.static('build'))
 // Muuta koodi json muotoon.
 app.use(express.json())
 app.use(morgan('tiny', {
@@ -37,11 +38,7 @@ let notes = [
 ]
 
 app.get('/', (request, response) => {
-    response.send("Fuck nuggets") 
-
-    if (response) {
-        throw err;
-    }
+    response.send("Hey hey hey...")
 })
 
 app.get('/api/persons', (request, response) => {
