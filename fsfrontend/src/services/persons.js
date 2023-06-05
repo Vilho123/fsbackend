@@ -7,12 +7,12 @@ const getAll = () => {
 }
 
 const create = newObject => {
-    const request = axios.post(baseUrl, newObject)
+    const request = axios.post(`${baseUrl}`, newObject)
     return request.then(response => response.data);
 }
 
-const remove = (id) => {
-    const request = axios.delete(`${baseUrl}/${id}`)
+const remove = id => {
+    const request = axios.delete(`localhost:3001/api/persons/${id}`)
     return request.then(response => response.data);
 }
 

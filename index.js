@@ -37,11 +37,6 @@ let notes = [
         number: '39-23-6423122'
     }
 ]
-
-app.get('/', (request, response) => {
-    response.send("Hey hey hey...")
-})
-
 app.get('/api/persons', (request, response) => {
     response.json(notes)
 });
@@ -61,10 +56,10 @@ app.get('/api/persons/:id', (request, response) => {
 app.delete('/api/persons/:id', (request, response) => {
     const id = Number(request.params.id)
     const note = notes.find(note => note.id === id)
-    console.log("note: ", note)
 
     if (note) {
-        console.log("deleted")
+        let updatedNotes = notes.filter((note) => note.id !== id)
+        notes = updatedNotes
         response.status(204).end()
     } else {
         console.log("not found")
@@ -93,13 +88,13 @@ app.post('/api/persons', (request, response) => {
     : 0
 
     const newId = id + 1;
-
     const existingName = notes.find(note => note.name.toLowerCase() === body.name.toLowerCase())
 
     if (body.number === "") {
         console.error("number cannot be empty")
         return response.status(409).end()
     } else if (body.name === "") {
+        console.log("name cant be empty")
         console.error("Name cannot be empty")
         return response.status(409).end()
     } else if (existingName) {

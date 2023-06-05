@@ -32,6 +32,7 @@ const App = () => {
       name: newName,
       number: newNumber
     };
+
     for (var i = 0; i < persons.length; i++) {
       if (persons[i].name === newName && persons[i].number === newNumber) {
         return alert(`${newName} is already added to phonebook`)
@@ -60,6 +61,7 @@ const App = () => {
         })
       })
     }
+    console.log("not creating")
   };
 
   const handleErrorMessage = () => {
@@ -94,11 +96,11 @@ const App = () => {
   };
 
   const handleRemove = id => {
-    const existingPerson = persons.find(person => person.name === newName)
-    const existingNumber = persons.find(person => person.number === newNumber)
+    const existingPerson = persons.find(person => person.id === id)
 
-    if (!existingPerson && !existingNumber) {
-      console.log("here")
+    if (!existingPerson) {
+      console.log("person do not exist")
+      return;
     }
 
     getPerson(id)
@@ -108,7 +110,7 @@ const App = () => {
         .then(response => {
           getAll()
           .then(initialPersons => {
-          setPersons(initialPersons)
+            setPersons(initialPersons)
         })
         })
       }
