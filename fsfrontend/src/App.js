@@ -51,18 +51,41 @@ const App = () => {
     const existingPerson = persons.find(person => person.name === newName)
     const existingNumber = persons.find(person => person.number === newNumber)
 
-    if (!existingPerson && !existingNumber) {
+/*     if (!existingPerson && !existingNumber) {
       create(newObject)
       .then(response => {
         getAll()
         .then(initialPersons => {
           setPersons(initialPersons)
           handleSuccessMessage(newName);
-          console.log("created")
         })
       })
+    } */
+
+    if (!existingPerson && !existingNumber) {
+      try {
+        console.log("hi")
+        createPerson(newObject)
+        .then(response => {
+          return;
+        })
+      } catch (error) {
+
+      }
     }
   };
+
+  const createPerson = (object) => {
+    try {
+      create(object)
+      .then(response => {
+        console.log("halooo?=")
+        console.log("response", response)
+      })
+    } catch (error) {
+      console.log("error: ", error)
+    }
+  }
 
   const handleErrorMessage = () => {
     if (errorMessage === null) {
