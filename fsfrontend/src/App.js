@@ -58,10 +58,10 @@ const App = () => {
         .then(initialPersons => {
           setPersons(initialPersons)
           handleSuccessMessage(newName);
+          console.log("created")
         })
       })
     }
-    console.log("not creating")
   };
 
   const handleErrorMessage = () => {
@@ -108,6 +108,7 @@ const App = () => {
       if (window.confirm(`Delete ${response.name} ?`)) {
         remove(id)
         .then(response => {
+          console.log(response)
           getAll()
           .then(initialPersons => {
             setPersons(initialPersons)

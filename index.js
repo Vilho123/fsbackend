@@ -1,7 +1,13 @@
+require('dotenv').config()
 const express = require('express');
 const morgan = require('morgan');
 const app = express();
 const cors = require('cors')
+const Note = require('./models/note')
+const mongoose = require('mongoose')
+
+/* const url = `mongodb+srv://fullstack:${password}@cluster0.bpui307.mongodb.net/noteApp?retryWrites=true&w=majority` */
+
 
 app.use(express.static('build'))
 app.use(cors())
@@ -10,36 +16,29 @@ app.use(cors())
 app.use(express.json())
 app.use(morgan('tiny', {
     skip: function (req, res) {
-        console.log(req.body)   
+        console.log("morgan log", req.body)   
     }
 }))
 
-// Kovakoodattu taulukko
-let notes = [
-    {
-        id: 1,
-        name: 'Arto Hellas',
-        number: "040-123456",
-    },
-    {
-        id: 2,
-        name: 'Ada Lovelace',
-        number: '39-44-5323523'
-    },
-    {
-        id: 3,
-        name: 'Dan Abramov',
-        number: '12-43-234345'
-    },
-    {
-        id: 4,
-        name: 'Mary Poppendick',
-        number: '39-23-6423122'
-    }
-]
-app.get('/api/persons', (request, response) => {
-    response.json(notes)
-});
+// Express error handling example
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+
+    if (error.name === 'CastError') {
+        return response.status(400).send({ error: 'malformatted id' })
+    } else if (error.name === 'ValidationError') {
+        console.log("tuliks tänne")
+        return response.status(400).send({ error: error.message })
+    }   
+    next(error)
+}
+
+app.get('/api/notes', (request, response, next) => {
+    Note.find({}).then(notes => {
+        response.json(notes)
+    })
+    .catch(error => next(error))
+})
 
 app.get('/api/info', (request, response) => {
     const date = new Date()
@@ -47,24 +46,54 @@ app.get('/api/info', (request, response) => {
     response.send(`<p>Phonebook has info for ${contactsCount} people</p>` + date)
 })
 // Get person with id
-app.get('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    const note = notes.find(n => n.id === id)
-    response.json(note)
+app.get('/api/notes/:id', (request, response, next) => {
+    Note.findById(request.params.id)
+    .then(note => {
+        if (note) {
+            response.json(note)
+        } else {
+            response.status(404).end()
+        }
+    }) // sends the error to errorhandling middleware
+    .catch(error => next(error)) 
+})
+
+// Delete note
+app.delete('/api/notes/:id', (request, response, next) => {
+    Note.findByIdAndDelete(request.params.id)
+    .then(result => {
+        response.status(204).end()
+    })
+    .catch(error => next(error) ) 
 });
 
-app.delete('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    const note = notes.find(note => note.id === id)
+// Update note
+app.put('/api/notes/:id', (request, response, next) => {
+    const body = request.body
+    console.log("body ", body)
 
-    if (note) {
-        let updatedNotes = notes.filter((note) => note.id !== id)
-        notes = updatedNotes
-        response.status(204).end()
-    } else {
-        console.log("not found")
-        response.status(404).end()
+    const note = {
+        name: body.content,
+        number: body.number
     }
+
+    Note.findByIdAndUpdate(request.params.id, note, { new: true })
+    .then(updatedNote => {
+        response.json(updatedNote)
+    })
+    .catch(error => next(error))
+
+    // better way to make it with validators
+
+    /* const { name, number } = request.body;
+    Note.findByIdAndUpdate(request.params.id,
+        { name, number },
+        { new: true, runValidators: true, context: 'query' }
+        )
+        .then(updatedNote => {
+            response.json(updatedNote)
+        })
+        .catch(error => next(error)) */
 });
 
 const generateId = () => {
@@ -81,36 +110,24 @@ const generateId = () => {
     return random;
 }
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/notes', (request, response, next) => {
     const body = request.body
-    const id = notes.length > 0
-    ? Math.max(...notes.map(n => n.id))
-    : 0
+    console.log("body ", body)
 
-    const newId = id + 1;
-    const existingName = notes.find(note => note.name.toLowerCase() === body.name.toLowerCase())
-
-    if (body.number === "") {
-        console.error("number cannot be empty")
-        return response.status(409).end()
-    } else if (body.name === "") {
-        console.log("name cant be empty")
-        console.error("Name cannot be empty")
-        return response.status(409).end()
-    } else if (existingName) {
-        console.error("Name already exists")
-        return response.status(404).end() 
+    if (body.name === undefined || body.number === undefined) {
+        return response.status(400).json({ error: 'content missing' })
     }
+    
+    const note = new Note({
+        name: body.name,
+        number: body.number,
+    })
 
-    const note = [
-        {
-            id: generateId(),
-            name: body.name,
-            number: body.number || "no number"
-        }
-    ]
-    notes = notes.concat(note)
-    response.status(204).end()
+    note.save().then(savedNote => {
+        console.log("inside save")
+        response.json(savedNote)
+    }) 
+    .catch(error => next(error))
 });
 
 // Exampe middleware function
@@ -118,11 +135,11 @@ app.post('/api/persons', (request, response) => {
 /* const unknownEndpoint = (request, response) => {
     response.status(404).send({ error: 'Unknown endpoint' });
 }
- app.use(unknownEndpoint)  */
+ app.use(unknownEndpoint) 
+*/
 
-
-
-//----------------------
-const PORT = process.env.PORT || 3001
-app.listen(PORT)
-console.log(`Server running on port ${PORT}`)
+app.use(errorHandler)
+const PORT = process.env.PORT
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`)
+})
