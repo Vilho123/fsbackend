@@ -4,7 +4,6 @@ const morgan = require('morgan');
 const app = express();
 const cors = require('cors')
 const Note = require('./models/note')
-const mongoose = require('mongoose')
 
 /* const url = `mongodb+srv://fullstack:${password}@cluster0.bpui307.mongodb.net/noteApp?retryWrites=true&w=majority` */
 
@@ -15,8 +14,8 @@ app.use(cors())
 // Muuta koodi json muotoon.
 app.use(express.json())
 app.use(morgan('tiny', {
-    skip: function (req, res) {
-        console.log("morgan log", req.body)   
+    skip: function (req) {
+        console.log("morgan log", req.body)
     }
 }))
 
@@ -28,7 +27,7 @@ const errorHandler = (error, request, response, next) => {
         return response.status(400).send({ error: 'malformatted id' })
     } else if (error.name === 'ValidationError') {
         return response.status(400).send({ error: error.message })
-    }   
+    }
     next(error)
 }
 
@@ -39,11 +38,12 @@ app.get('/api/notes', (request, response, next) => {
     .catch(error => next(error))
 })
 
-app.get('/api/info', (request, response) => {
+/* app.get('/api/info', (request, response) => {
     const date = new Date()
-    const contactsCount = notes.length
+    const contactsCount = request.body.length
     response.send(`<p>Phonebook has info for ${contactsCount} people</p>` + date)
-})
+}) */
+
 // Get person with id
 app.get('/api/notes/:id', (request, response, next) => {
     Note.findById(request.params.id)
@@ -54,16 +54,16 @@ app.get('/api/notes/:id', (request, response, next) => {
             response.status(404).end()
         }
     }) // sends the error to errorhandling middleware
-    .catch(error => next(error)) 
+    .catch(error => next(error))
 })
 
 // Delete note
 app.delete('/api/notes/:id', (request, response, next) => {
     Note.findByIdAndDelete(request.params.id)
-    .then(result => {
+    .then(/*result*/() => {
         response.status(204).end()
     })
-    .catch(error => next(error) ) 
+    .catch(error => next(error))
 });
 
 // Update note
@@ -95,7 +95,7 @@ app.put('/api/notes/:id', (request, response, next) => {
         .catch(error => next(error)) */
 });
 
-const generateId = () => {
+/* const generateId = () => {
     let arr = [];
     const random = Math.floor(Math.random() * 100000)
     const thing = notes.map(note => {
@@ -107,7 +107,7 @@ const generateId = () => {
         return generateId()
     }
     return random;
-}
+} */
 
 app.post('/api/notes', (request, response, next) => {
     const body = request.body
@@ -116,7 +116,6 @@ app.post('/api/notes', (request, response, next) => {
     if (body.name === undefined || body.number === undefined) {
         return response.status(400).json({ error: 'content missing' })
     }
-    
     const note = new Note({
         name: body.name,
         number: body.number,
@@ -125,7 +124,7 @@ app.post('/api/notes', (request, response, next) => {
     note.save().then(savedNote => {
         console.log("inside save")
         response.json(savedNote)
-    }) 
+    })
     .catch(error => next(error))
 });
 
@@ -134,7 +133,7 @@ app.post('/api/notes', (request, response, next) => {
 /* const unknownEndpoint = (request, response) => {
     response.status(404).send({ error: 'Unknown endpoint' });
 }
- app.use(unknownEndpoint) 
+ app.use(unknownEndpoint)
 */
 
 app.use(errorHandler)

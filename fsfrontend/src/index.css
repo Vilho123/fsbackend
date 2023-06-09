@@ -6,8 +6,13 @@ h2 {
     color: yellow;
 }
 
-.error {
-    color: red;
+
+.error-button {
+    color: green;
+    font-size: 15px;
+}
+.success {
+    color: green;
     background: lightgray;
     font-size: 20px;
     border-style: solid;
@@ -15,12 +20,8 @@ h2 {
     padding: 10px;
     margin-bottom: 10px;
 }
-.error-button {
-    color: green;
-    font-size: 15px;
-}
-.success {
-    color: green;
+.error {
+    color: red;
     background: lightgray;
     font-size: 20px;
     border-style: solid;

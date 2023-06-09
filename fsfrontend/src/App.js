@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react'
 import Filter from './components/Filter';
 import Persons from './components/Persons';
 import PersonForm from './components/PersonForm';
-import Notification from './components/Notification';
+import SuccessNotification from './components/SuccessNotification';
+import ErrorNotification from "./components/ErrorNotification";
 import Footer from './components/Footer';
 import { getAll, create, remove, getPerson, updatePerson } from './services/persons';
 import "./index.css";
@@ -63,35 +64,28 @@ const App = () => {
     } */
 
     if (!existingPerson && !existingNumber) {
-      try {
-        console.log("hi")
-        createPerson(newObject)
-        .then(response => {
-          return;
+      create(newObject)
+      .then(response => {
+        getAll()
+        .then(initialPersons => {
+          setPersons(initialPersons)
+          handleSuccessMessage(newName)
         })
-      } catch (error) {
-
-      }
+      })
+      .catch(error => {
+        handleErrorMessage(error.response.data)
+      })
     }
   };
 
-  const createPerson = (object) => {
-    try {
-      create(object)
-      .then(response => {
-        console.log("halooo?=")
-        console.log("response", response)
-      })
-    } catch (error) {
-      console.log("error: ", error)
-    }
-  }
+  const handleErrorMessage = error => {
+    if (error) {
+      setErrorMessage(error.error)
+      console.log("Error log", error)
 
-  const handleErrorMessage = () => {
-    if (errorMessage === null) {
-      setErrorMessage('Error ocurred')
-    } else if (errorMessage !== null) {
-      setErrorMessage(null);
+      setTimeout(() => {
+        setErrorMessage(null)
+      }, 5000)
     }
   }
 
@@ -125,32 +119,25 @@ const App = () => {
       console.log("person do not exist")
       return;
     }
-
     getPerson(id)
     .then(response => {
       if (window.confirm(`Delete ${response.name} ?`)) {
         remove(id)
         .then(response => {
-          console.log(response)
           getAll()
           .then(initialPersons => {
             setPersons(initialPersons)
-        })
+          })
         })
       }
     })
-  };
+  }
   
-  return (
+  return (  
     <div>
       <h2>Phonebook</h2>
-      <button
-      className='error-button'
-      onClick={() => handleErrorMessage()}
-      >
-        Display error
-      </button>
-      <Notification success={successMessage} />
+      <SuccessNotification success={successMessage} />
+      <ErrorNotification error={errorMessage} />
       <Filter
       query={state.query}
       handleFilter={handleFilter}
